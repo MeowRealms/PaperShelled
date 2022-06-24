@@ -7,9 +7,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class GlobalProperty implements IGlobalPropertyService {
+
     private final Map<String, IPropertyKey> keys = new HashMap<>();
     private final HashMap<IPropertyKey, Object> map = new HashMap<>();
-    static final class Key implements IPropertyKey { }
+
+    static final class Key implements IPropertyKey {
+    }
 
     @Override
     public IPropertyKey resolveKey(String name) {

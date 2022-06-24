@@ -3,7 +3,8 @@ package cn.apisium.papershelled.plugin;
 import java.util.Collections;
 import java.util.List;
 
-public final class PaperShelledPluginDescription {
+public final class PaperShelledDescription {
+
     @SuppressWarnings({"unused", "MismatchedQueryAndUpdateOfCollection"})
     private List<String> mixins;
 

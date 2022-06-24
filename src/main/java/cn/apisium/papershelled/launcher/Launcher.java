@@ -10,6 +10,7 @@ import java.util.jar.JarFile;
 
 @SuppressWarnings("unused")
 public class Launcher {
+
     public static void launch(String[] args) {
         try {
             Class<?> clipClz = Launcher.class.getClassLoader().loadClass("io.papermc.paperclip.Paperclip");
@@ -28,9 +29,7 @@ public class Launcher {
                     findMainClass.setAccessible(true);
                     String name = (String) findMainClass.invoke(null);
                     Class<?> main = Class.forName(name);
-                    System.out.print("Launching ");
-                    System.out.println(name);
-                    main.getMethod("main", String[].class).invoke(null, (Object)args);
+                    main.getMethod("main", String[].class).invoke(null, (Object) args);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

@@ -8,17 +8,18 @@ import java.util.Date;
 import java.util.logging.*;
 
 public class PaperShelledLogger extends Logger {
+
     public static ConsoleHandler LOGGER_HANDLER = new ConsoleHandler();
     private static ArrayList<PaperShelledLogger> instances = new ArrayList<>();
 
     static {
         LOGGER_HANDLER.setFormatter(new Formatter() {
+
             @SuppressWarnings("deprecation")
             @Override
             public String format(LogRecord record) {
                 Date date = new Date(record.getMillis());
-                return String.format("[%02d:%02d:%02d %s]: [%s] %s%n", date.getHours(), date.getMinutes(),
-                        date.getSeconds(), record.getLevel().getName(), record.getLoggerName(), record.getMessage());
+                return String.format("[%02d:%02d:%02d %s]: [%s] %s%n", date.getHours(), date.getMinutes(), date.getSeconds(), record.getLevel().getName(), record.getLoggerName(), record.getMessage());
             }
         });
     }

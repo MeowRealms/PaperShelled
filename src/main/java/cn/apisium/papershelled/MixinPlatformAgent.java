@@ -8,12 +8,18 @@ import org.spongepowered.asm.util.Constants;
 import java.util.Collection;
 
 public final class MixinPlatformAgent extends MixinPlatformAgentAbstract implements IMixinPlatformServiceAgent {
-    @Override
-    public void init() { }
 
     @Override
-    public String getSideName() { return Constants.SIDE_DEDICATEDSERVER; }
+    public void init() {
+    }
 
     @Override
-    public Collection<IContainerHandle> getMixinContainers() { return null; }
+    public String getSideName() {
+        return Constants.SIDE_DEDICATEDSERVER;
+    }
+
+    @Override
+    public Collection<IContainerHandle> getMixinContainers() {
+        return null;
+    }
 }
