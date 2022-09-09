@@ -65,7 +65,6 @@ public final class PaperShelled {
             }
             try {
                 loadMixin(file, description);
-                break;
             } catch (InvalidPluginException ex) {
                 ex.printStackTrace();
                 PaperShelledAgent.LOGGER.log(Level.SEVERE, "Could not load '" + file.getPath() + "'", ex);
