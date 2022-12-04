@@ -2,6 +2,7 @@ package cn.apisium.papershelled;
 
 import cn.apisium.papershelled.plugin.PaperShelledDescription;
 import cn.apisium.papershelled.plugin.PaperShelledPlugin;
+import cn.apisium.papershelled.util.MixinJarUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -46,7 +47,7 @@ public final class PaperShelled {
                 versionJson = new JsonParser().parse(new InputStreamReader(is)).getAsJsonObject();
             }
         }
-        Path patch = Paths.get("papershelled");
+        Path patch = Paths.get("plugins");
         Files.createDirectories(patch);
         loadMixins(patch);
     }
@@ -63,6 +64,9 @@ public final class PaperShelled {
                 PaperShelledAgent.LOGGER.log(Level.SEVERE, "Could not load '" + file.getPath() + "'", ex);
                 continue;
             }
+
+            if (description.getMixins().isEmpty()) continue;
+
             try {
                 loadMixin(file, description);
             } catch (InvalidPluginException ex) {
@@ -72,18 +76,19 @@ public final class PaperShelled {
         }
     }
 
-    public static void loadMixin(@NotNull final File file, @NotNull final PaperShelledDescription description) throws InvalidPluginException {
+    private static void loadMixin(@NotNull final File file, @NotNull final PaperShelledDescription description) throws InvalidPluginException {
         if (!file.exists()) {
             throw new InvalidPluginException(new FileNotFoundException(file + " does not exist"));
         }
         try {
-            PaperShelledPlugin plugin = new PaperShelledPlugin(file.getName(), new JarFile(file));
-            pluginsMap.put(file.getName(), plugin);
-            PaperShelledAgent.getInstrumentation().appendToSystemClassLoaderSearch(plugin.getJar());
-            description.getMixins().forEach(it -> {
-                Mixins.addConfiguration(file.getName() + "|" + it);
-                PaperShelledAgent.LOGGER.log(Level.INFO, "Loading " + it);
-            });
+            for (String mixin : description.getMixins()) {
+                File mixinJar = MixinJarUtil.createMixinJarFile(file, mixin, com.google.common.io.Files.getNameWithoutExtension(file.getName()) + "-");
+                PaperShelledPlugin plugin = new PaperShelledPlugin(mixinJar.getName(), new JarFile(mixinJar));
+                pluginsMap.put(mixinJar.getName(), plugin);
+                PaperShelledAgent.getInstrumentation().appendToSystemClassLoaderSearch(plugin.getJar());
+                Mixins.addConfiguration(mixinJar.getName() + "|" + mixin);
+                PaperShelledAgent.LOGGER.log(Level.INFO, "Loading " + file.getName() + "/" + mixin);
+            }
         } catch (IOException ex) {
             throw new InvalidPluginException(ex);
         }

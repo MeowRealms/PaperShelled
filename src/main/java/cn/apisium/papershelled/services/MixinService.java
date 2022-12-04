@@ -26,7 +26,6 @@ import java.nio.file.NoSuchFileException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.logging.Logger;
 
 public final class MixinService extends MixinServiceAbstract implements IClassProvider, IClassBytecodeProvider {
@@ -97,7 +96,7 @@ public final class MixinService extends MixinServiceAbstract implements IClassPr
                 if (plugin == null) {
                     throw new NoSuchFileException("No such plugin: " + names[0]);
                 }
-                JarEntry entry = plugin.getJar().getJarEntry("mixin/" + names[1]);
+                JarEntry entry = plugin.getJar().getJarEntry(names[1]);
                 if (entry == null) {
                     throw new NoSuchFileException("No such file: " + names[1]);
                 }
