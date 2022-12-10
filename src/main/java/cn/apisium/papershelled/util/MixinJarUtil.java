@@ -50,10 +50,12 @@ public class MixinJarUtil {
 
             if (configEntry != null) {
                 List<String> mixinClasses = new ArrayList<>();
+                byte[] configBytes;
                 String refMapperConfig = null;
 
                 try (InputStream is = jar.getInputStream(configEntry)) {
                     JsonObject config = new Gson().fromJson(new InputStreamReader(is), JsonObject.class);
+                    configBytes = config.toString().getBytes();
 
                     if (config.has("package")) {
                         String mixinPackage = config.get("package").getAsString() + ".";
@@ -81,10 +83,7 @@ public class MixinJarUtil {
                 }
 
                 if (!mixinBytes.isEmpty()) {
-                    try (InputStream is = jar.getInputStream(configEntry)) {
-                        byte[] configBytes = ByteStreams.toByteArray(is);
-                        mixinBytes.put(mixinConfig, configBytes);
-                    }
+                    mixinBytes.put(mixinConfig, configBytes);
 
                     if (refMapperConfig != null) {
                         JarEntry refmapEntry = jar.getJarEntry(refMapperConfig);
