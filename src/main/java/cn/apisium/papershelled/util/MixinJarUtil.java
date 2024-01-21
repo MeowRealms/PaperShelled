@@ -27,15 +27,15 @@ import java.util.jar.Manifest;
 public class MixinJarUtil {
 
     @NotNull
-    public static File createMixinJarFile(@NotNull File file, @NotNull String mixinConfig, @NotNull String prefix) throws IOException {
-        Map<String, byte[]> mixinBytes = getMixinBytes(file, mixinConfig);
+    public static File createMixinJarFile(@NotNull File file, @NotNull String mixinConfig, @NotNull String prefix, @NotNull List<String> additions) throws IOException {
+        Map<String, byte[]> mixinBytes = getMixinBytes(file, mixinConfig, additions);
         if (mixinBytes.isEmpty()) throw new FileNotFoundException("Class or config not found");
 //        mixinBytes.keySet().forEach(PaperShelledAgent.LOGGER::severe);
         return createJarFile(prefix, mixinBytes);
     }
 
     @NotNull
-    private static Map<String, byte[]> getMixinBytes(@NotNull File file, @NotNull String mixinConfig) throws IOException {
+    private static Map<String, byte[]> getMixinBytes(@NotNull File file, @NotNull String mixinConfig, @NotNull List<String> additions) throws IOException {
         if (!file.exists()) {
             throw new FileNotFoundException(file + " does not exist");
         }
@@ -78,6 +78,18 @@ public class MixinJarUtil {
                         try (InputStream is = jar.getInputStream(classEntry)) {
                             byte[] classBytes = ByteStreams.toByteArray(is);
                             mixinBytes.put(mixinClassPath, classBytes);
+                        }
+                    }
+                }
+
+                for (String additionClass : additions) {
+                    String additionClassPath = additionClass.replace('.', '/') + ".class";
+                    JarEntry classEntry = jar.getJarEntry(additionClassPath);
+
+                    if (classEntry != null) {
+                        try (InputStream is = jar.getInputStream(classEntry)) {
+                            byte[] classBytes = ByteStreams.toByteArray(is);
+                            mixinBytes.put(additionClassPath, classBytes);
                         }
                     }
                 }

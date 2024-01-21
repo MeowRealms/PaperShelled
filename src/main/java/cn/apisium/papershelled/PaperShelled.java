@@ -82,7 +82,7 @@ public final class PaperShelled {
         }
         try {
             for (String mixin : description.getMixins()) {
-                File mixinJar = MixinJarUtil.createMixinJarFile(file, mixin, com.google.common.io.Files.getNameWithoutExtension(file.getName()) + "-");
+                File mixinJar = MixinJarUtil.createMixinJarFile(file, mixin, com.google.common.io.Files.getNameWithoutExtension(file.getName()) + "-", description.getAdditions());
                 PaperShelledPlugin plugin = new PaperShelledPlugin(mixinJar.getName(), new JarFile(mixinJar));
                 pluginsMap.put(mixinJar.getName(), plugin);
                 PaperShelledAgent.getInstrumentation().appendToSystemClassLoaderSearch(plugin.getJar());
