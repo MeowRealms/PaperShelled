@@ -5,8 +5,6 @@ import com.google.common.io.ByteStreams;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.ClassRemapper;
-import org.objectweb.asm.commons.Remapper;
 import org.spongepowered.asm.launch.MixinBootstrap;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.transformer.IMixinTransformer;
@@ -17,17 +15,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.net.JarURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.ProtectionDomain;
-import java.util.Enumeration;
 import java.util.Objects;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.logging.Logger;
 
 public final class PaperShelledAgent {
@@ -36,33 +30,11 @@ public final class PaperShelledAgent {
 
     private static boolean initialized;
     private static Instrumentation instrumentation;
-    private static String obcVersion, obcClassName;
     private static Path serverJar;
-
-    private final static Remapper remapper = new Remapper() {
-
-        @Override
-        public String map(String name) {
-            if (!name.startsWith("org/bukkit/craftbukkit/Main") && !name.startsWith("org/bukkit/craftbukkit/libs/") &&
-                    name.startsWith("org/bukkit/craftbukkit/") && !name.startsWith("org/bukkit/craftbukkit/v1_")) {
-                if (obcVersion == null) {
-                    throw new IllegalStateException("Cannot detect minecraft version!");
-                }
-                return obcClassName + name.substring(23);
-            }
-            return super.map(name);
-        }
-    };
 
     @NotNull
     public static Instrumentation getInstrumentation() {
         return instrumentation;
-    }
-
-    @SuppressWarnings("unused")
-    @NotNull
-    public static String getReleaseVersion() {
-        return obcVersion;
     }
 
     @SuppressWarnings("unused")
@@ -94,7 +66,8 @@ public final class PaperShelledAgent {
 
         @Override
         public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] data) {
-            if ("io/papermc/paperclip/Paperclip".equals(className)) {
+            if ("cn/dreeam/leaper/QuantumLeaper".equals(className)) {
+                LOGGER.info("Injecting cn/dreeam/leaper/QuantumLeaper");
                 ClassReader cr = new ClassReader(data);
                 ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
                 cr.accept(new ClassVisitor(Opcodes.ASM9, cw) {
@@ -137,6 +110,7 @@ public final class PaperShelledAgent {
                 }, ClassReader.EXPAND_FRAMES);
                 return cw.toByteArray();
             } else if ("org/bukkit/craftbukkit/Main".equals(className)) {
+                LOGGER.info("Injecting org/bukkit/craftbukkit/Main");
                 data = inject(data, "main", "cn/apisium/papershelled/PaperShelledAgent", "init");
                 URL url = Objects.requireNonNull(loader.getResource("org/bukkit/craftbukkit/Main.class"));
                 try {
@@ -144,39 +118,18 @@ public final class PaperShelledAgent {
                 } catch (URISyntaxException e) {
                     e.printStackTrace();
                 }
-                try (JarFile jar = ((JarURLConnection) url.openConnection()).getJarFile()) {
-                    Enumeration<JarEntry> entries = jar.entries();
-                    while (entries.hasMoreElements()) {
-                        String name = entries.nextElement().getName();
-                        if (name.startsWith("org/bukkit/craftbukkit/v")) {
-                            obcVersion = name.substring(23).split("/", 2)[0];
-                            obcClassName = "org/bukkit/craftbukkit/" + obcVersion + "/";
-                            LOGGER.info("Detected minecraft version: " + obcVersion);
-                            break;
-                        }
-                    }
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                }
-            } else if (className.startsWith("org/bukkit/craftbukkit/v1_") && className.endsWith("/CraftServer")) {
-//                data = inject(data, "loadPlugins", "cn/apisium/papershelled/PaperShelled", "injectPlugins");
-                if (obcVersion == null) {
-                    obcVersion = className.substring(23).split("/", 2)[0];
-                    obcClassName = "org/bukkit/craftbukkit/" + obcVersion + "/";
-                    LOGGER.info("Detected minecraft version: " + obcVersion);
-                }
             }
             if (!initialized) {
                 return data;
             }
             IMixinTransformer transformer = MixinService.getTransformer();
-            return transformer == null ? null : transformer.transformClass(MixinEnvironment.getDefaultEnvironment(), className.replace('/', '.'), relocate(data));
+            return transformer == null ? null : transformer.transformClass(MixinEnvironment.getDefaultEnvironment(), className.replace('/', '.'), data);
         }
     }
 
     private static void initPaperShelled(Instrumentation instrumentation) {
 //        Package pkg = PaperShelledAgent.class.getPackage();
-//        LOGGER.info(pkg.getImplementationTitle() + " version: " + pkg.getImplementationVersion() + " (" + pkg.getImplementationVendor() + ")");
+//        LOGGER.info(pkg.getImplementationTitle() + " (" + pkg.getImplementationVendor() + ")");
 //        LOGGER.info("You can get the latest updates from: https://github.com/Apisium/PaperShelled");
         System.setProperty("mixin.env.remapRefMap", "true");
         PaperShelledAgent.instrumentation = instrumentation;
@@ -199,6 +152,7 @@ public final class PaperShelledAgent {
 
     @SuppressWarnings("unused")
     public static void init() throws Throwable {
+        LOGGER.info("Initializing");
         initialized = true;
         PaperShelled.init();
         PaperShelledLogger.restore();
@@ -221,14 +175,6 @@ public final class PaperShelledAgent {
                 } : mv;
             }
         }, ClassReader.SKIP_DEBUG);
-        return cw.toByteArray();
-    }
-
-    private static byte[] relocate(byte[] arr) {
-        ClassReader cr = new ClassReader(arr);
-        ClassWriter cw = new ClassWriter(0);
-        cr.accept(new ClassRemapper(Opcodes.ASM9, cw, remapper) {
-        }, ClassReader.EXPAND_FRAMES);
         return cw.toByteArray();
     }
 }

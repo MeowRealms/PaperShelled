@@ -27,6 +27,7 @@ import java.util.logging.Level;
 public final class PaperShelled {
 
     private static JsonObject versionJson;
+//    private static ContainerHandleModLauncher source;
     private static final Map<String, PaperShelledPlugin> pluginsMap = new HashMap<>();
 
     @SuppressWarnings("unused")
@@ -42,6 +43,7 @@ public final class PaperShelled {
 
     @SuppressWarnings("ProtectedMemberInFinalClass")
     protected static void init() throws Throwable {
+//        source = new ContainerHandleModLauncher("PaperShelled");
         try (InputStream is = PaperShelledAgent.getResourceAsStream("version.json")) {
             if (is != null) {
                 versionJson = new JsonParser().parse(new InputStreamReader(is)).getAsJsonObject();

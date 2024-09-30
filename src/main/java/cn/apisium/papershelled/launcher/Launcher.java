@@ -13,7 +13,7 @@ public class Launcher {
 
     public static void launch(String[] args) {
         try {
-            Class<?> clipClz = Launcher.class.getClassLoader().loadClass("io.papermc.paperclip.Paperclip");
+            Class<?> clipClz = Launcher.class.getClassLoader().loadClass("cn.dreeam.leaper.QuantumLeaper");
             Method setupClasspath = clipClz.getDeclaredMethod("setupClasspath");
             setupClasspath.setAccessible(true);
             Arrays.stream((URL[]) setupClasspath.invoke(null)).map(u -> {
